@@ -1,0 +1,16 @@
+{
+  "name": "chatbot-questionnaire",
+  "version": "1.0.0",
+  "description": "Employee questionnaire chatbot via Gemini API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.5",
+    "express": "^4.19.2"
+  }
+}
