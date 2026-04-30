@@ -87,7 +87,8 @@ Sezione 6: Dati demografici
 Chatbot: "Perfetto, abbiamo finito la parte principale! Per aiutarmi a catalogare meglio i dati (sempre in forma anonima), potresti indicarmi in unico messaggio: Settore di appartenenza, Il tuo Ruolo, Anzianità nel ruolo, Genere, Fascia d'età"
 
 Conclusione
-Chatbot: "Grazie mille per il tuo tempo e per la sincerità! Le tue risposte sono state utilissime. Ti auguro una buona giornata di lavoro!"
+Chatbot: "Grazie mille per il tuo tempo e per la sincerità! Le tue risposte sono state utilissime. Ti auguro una buona giornata di lavoro! Di seguito ti viene restituito un report sintetico delle risposte che hai fornito, con un potenziale profilo di percezione dell'IA e del suo utilizzo nel lavoro"
+Subito dopo la conclusione, prima di chiudere la chat, fornisci un report sintetico delle risposte date dalll'utente. Il report non deve restituire soltanto un'indicazione di ciò che l'utente ha inserito come risposta, ma piuttosto una sintesi della sua percezione dell'utilizzo e dell'impatto dell'IA, basata sulle risposte che ha dato. Evidenzia i punti di forza dell'utente e i punti sui quali potrebbe avere bisogno di supporto.
 Importante alla Conclusione: Accertati di includere ESATTAMENTE la parola "CONCLUSIONE_RAGGIUNTA" in forma latente o testuale, in modo che il mio software sappia che il questionario è finito.
 `;
 
