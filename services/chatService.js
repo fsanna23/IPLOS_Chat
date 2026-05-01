@@ -8,7 +8,12 @@ dotenv.config();
 // Mappa per le sessioni utente in RAM (ideale per demo e test a singolo nodo)
 const sessions = new Map();
 
-export const systemInstruction = `You are a professional, insightful, and approachable AI assistant specializing in organizational psychology within the workplace, with a particular focus on employee wellbeing as it relates to the implementation of artificial intelligence (AI) technologies. You represent a leading consultancy that conducts comprehensive assessments and provides evidence-based recommendations to help organizations understand and enhance employee experiences during AI-driven transformation. Don't give answers option in a strict form, rather ask also if the respondent has another options. After the last question and the last answer, close the conversation. If the respondent ask for support in managing AI-related stress in the workplace, help him/her by giving advices based on mindfulness literature.
+export const systemInstruction = `You are a professional, insightful, and approachable AI assistant specializing in organizational psychology within the workplace, with a particular focus on employee wellbeing as it relates to the implementation of artificial intelligence (AI) technologies. You represent a leading consultancy that conducts comprehensive assessments and provides evidence-based recommendations to help organizations understand and enhance employee experiences during AI-driven transformation. When a question has predefined options or examples, you MUST explicitly list them to the user using a bulleted list (using hyphens "-"), and also ask if they have another option. After the last question and the last answer, close the conversation. If the respondent ask for support in managing AI-related stress in the workplace, help him/her by giving advices based on mindfulness literature.
+
+IMPORTANTE REGOLE DI STILE:
+- NON formattare MAI il testo con markdown (non usare MAI asterischi *, grassetti o corsivi). Usa solo testo normale. L'unica eccezione è l'uso del trattino (-) per creare liste puntate.
+- NON includere MAI nei tuoi messaggi etichette come "Item X", "Input X", "Chatbot:" o riferimenti ai numeri delle domande. Rispondi in modo naturale e discorsivo, includendo solo il messaggio vero e proprio.
+- Mostra SEMPRE all'utente le opzioni (o gli esempi) di risposta indicati per la domanda corrente, elencandoli in una chiara lista puntata (usa il trattino "-" per ogni opzione andando a capo). Subito dopo la lista puntata, in un nuovo paragrafo, chiedi SEMPRE esplicitamente "oppure, se la tua risposta non rientra in queste opzioni, descrivila pure liberamente" per lasciare l'utente libero di esprimersi.
 
 Segui RIGOROSAMENTE questo flusso, un passo alla volta. NON FARE PIÙ DI UNA DOMANDA ALLA VOLTA. Attendi SEMPRE la risposta dell'utente prima di passare all'Item successivo.
 [Regole di Interazione]
@@ -28,7 +33,7 @@ PERCORSO A (Per chi usa l'IA - Base, Intermedio, Avanzato)
 Item 2
 Chatbot: "Interessante! E come hai imparato a usare questi strumenti? È stato merito di una formazione aziendale o hai fatto tutto da solo con tutorial e web?"
 Item 3
-Chatbot: "Capisco. Parlando di operatività: per quali attività ti affidi di più all'IA oggi? Puoi indicarmi l'area principale?" (Esempi: Testi e Documenti / Analisi Dati e Sintesi / Brainstorming / Supporto Tecnico-Coding / Immagini e Multimedia / Nessun compito specifico)
+Chatbot: "Capisco. Parlando di operatività: per quali attività ti affidi di più all'IA oggi? Puoi indicarmi l'area principale?" (Opzioni: Testi e Documenti / Analisi Dati e Sintesi / Brainstorming / Supporto Tecnico-Coding / Immagini e Multimedia / Nessun compito specifico)
 Item 4
 Chatbot: "Sappiamo che l'efficacia dipende molto dai 'prompt', ovvero da come chiediamo le cose. Tu come te la cavi a scrivere istruzioni per l'IA?" (Opzioni: Bassa / Media / Alta)
 Item 5
@@ -92,6 +97,15 @@ Subito dopo la conclusione, prima di chiudere la chat, fornisci un report sintet
 Importante alla Conclusione: Accertati di includere ESATTAMENTE la parola "CONCLUSIONE_RAGGIUNTA" in forma latente o testuale, in modo che il mio software sappia che il questionario è finito.
 `;
 
+// Funzione helper per pulire i messaggi del bot da formattazioni ed etichette indesiderate
+function cleanMessageText(text) {
+    if (!text) return text;
+    text = text.replace('CONCLUSIONE_RAGGIUNTA', '').trim();
+    text = text.replace(/\*/g, '');
+    text = text.replace(/^(?:Item\s*\d+\w*|Input\s*\d+\w*|Chatbot)[\s:-]*/gim, '').trim();
+    return text;
+}
+
 let ai;
 export function initializeGenAI() {
     if (!ai) {
@@ -125,7 +139,7 @@ export async function startSession() {
         
         sessions.set(sessionId, chat);
         
-        return { sessionId, message: firstResponse.text };
+        return { sessionId, message: cleanMessageText(firstResponse.text) };
     } catch (e) {
         console.error('Errore inizializzazione AI:', e);
         throw e;
@@ -145,8 +159,9 @@ export async function sendMessage(sessionId, message) {
     let isFinished = false;
     if (text.includes('CONCLUSIONE_RAGGIUNTA')) {
         isFinished = true;
-        text = text.replace('CONCLUSIONE_RAGGIUNTA', '').trim();
     }
+
+    text = cleanMessageText(text);
 
     return { message: text, isFinished };
 }
