@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const typingIndicator = document.getElementById('typing-indicator');
-    const conclusionModal = document.getElementById('conclusion-modal');
 
     let sessionId = null;
     let isWaiting = false;
@@ -88,10 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ sessionId })
             });
             
-            // Mostra modale finale
-            setTimeout(() => {
-                conclusionModal.classList.remove('hidden');
-            }, 1000);
+            // Sostituisce l'area di input con un messaggio di fine
+            const inputArea = document.querySelector('.input-area');
+            inputArea.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); font-weight: 500; padding: 10px;">Il questionario è terminato. Puoi scorrere per leggere il report.</div>';
+            
+            // Aggiunge un messaggio finale non bloccante
+            appendMessage("Questionario terminato. I tuoi dati sono stati salvati correttamente. Grazie per il tuo tempo!", 'bot');
             
         } catch(e) {
             console.error('Errore durante export Excel', e);
