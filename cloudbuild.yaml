@@ -22,7 +22,7 @@ steps:
       - 'managed'
       # Qui colleghiamo i segreti di Secret Manager alle env var del container
       - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:1,DATABASE_URL=DATABASE_URL:1'
 
 options:
   logging: CLOUD_LOGGING_ONLY
