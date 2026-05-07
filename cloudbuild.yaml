@@ -24,5 +24,8 @@ steps:
       - '--set-secrets'
       - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest'
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 images:
   - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iplos/iplos'
