@@ -1,0 +1,28 @@
+steps:
+  # 1. Build dell'immagine Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iplos/iplos', '.']
+
+  # 2. Push dell'immagine nel registro
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iplos/iplos']
+
+  # 3. Deploy su Cloud Run con iniezione dei segreti
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'iplos'
+      - '--image'
+      - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iplos/iplos'
+      - '--region'
+      - 'europe-west1' # Cambia con la tua regione
+      - '--platform'
+      - 'managed'
+      # Qui colleghiamo i segreti di Secret Manager alle env var del container
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest'
+
+images:
+  - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/iplos/iplos'
