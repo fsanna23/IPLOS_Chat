@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { sendMessage, startSession, extractAndSaveToExcel } from './services/chatService.js';
+import { sendMessage, startSession, extractAndSaveToExcel, deleteSession } from './services/chatService.js';
 
 dotenv.config();
 const app = express();
@@ -55,6 +55,16 @@ app.post('/api/finish', async (req, res) => {
         console.error('Errore salvataggio excel:', error);
         res.status(500).json({ error: "Errore durante l'estrazione e salvataggio dei dati." });
     }
+});
+
+// Annulla sessione
+app.post('/api/cancel', (req, res) => {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+        return res.status(400).json({ error: 'Missing sessionId' });
+    }
+    deleteSession(sessionId);
+    res.json({ success: true });
 });
 
 app.listen(PORT, () => {

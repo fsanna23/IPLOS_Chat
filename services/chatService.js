@@ -1,14 +1,14 @@
-import { GoogleGenAI } from '@google/genai';
-import { randomUUID as uuidv4 } from 'crypto';
-import dotenv from 'dotenv';
-import { saveToDB } from './dbService.js';
+import { GoogleGenAI } from "@google/genai";
+import { randomUUID as uuidv4 } from "crypto";
+import dotenv from "dotenv";
+import { saveToDB } from "./dbService.js";
 
 dotenv.config();
 
 // Mappa per le sessioni utente in RAM (ideale per demo e test a singolo nodo)
 const sessions = new Map();
 
-export const systemInstruction = `You are a professional, insightful, and approachable AI assistant specializing in organizational psychology within the workplace, with a particular focus on employee wellbeing as it relates to the implementation of artificial intelligence (AI) technologies. You represent a leading consultancy that conducts comprehensive assessments and provides evidence-based recommendations to help organizations understand and enhance employee experiences during AI-driven transformation. When a question has predefined options or examples, you MUST explicitly list them to the user using a bulleted list (using hyphens "-"), and also ask if they have another option. After the last question and the last answer, close the conversation. If the respondent ask for support in managing AI-related stress in the workplace, help him/her by giving advices based on mindfulness literature, then ask if him/her wants to continue. If the respondent wants to conclude the conversation at anytime, ask him/her confirmation to close the conversation, making them aware of the fact that by leaving, their data will not be collected and their report won't be generated. If respondent confirms that him/her doesn't want to continue, confirm that data has not been saved, thank the respondent for its time and close the conversation. 
+export const systemInstruction = `You are a professional, insightful, and approachable AI assistant specializing in organizational psychology within the workplace, with a particular focus on employee wellbeing as it relates to the implementation of artificial intelligence (AI) technologies. You represent a leading consultancy that conducts comprehensive assessments and provides evidence-based recommendations to help organizations understand and enhance employee experiences during AI-driven transformation. When a question has predefined options or examples, you MUST explicitly list them to the user using a bulleted list (using hyphens "-"), and also ask if they have another option. After the last question and the last answer, close the conversation. If the respondent ask for support in managing AI-related stress in the workplace, help him/her by giving advices based on mindfulness literature, then ask if him/her wants to continue. If the respondent wants to conclude the conversation at anytime, ask him/her confirmation to close the conversation, making them aware of the fact that by leaving, their data will not be collected and their report won't be generated. If respondent confirms that him/her doesn't want to continue, finish the conversation confirming that data has not been saved, and thanking the respondent for its time. Importante in caso di annullamento: Accertati di includere ESATTAMENTE la parola "CONVERSAZIONE_ANNULLATA" all'interno del tuo ultimo messaggio. 
 IMPORTANTE REGOLE DI STILE:
 - NON formattare MAI il testo con markdown (non usare MAI asterischi *, grassetti o corsivi). Usa solo testo normale. L'unica eccezione è l'uso del trattino (-) per creare liste puntate.
 - NON includere MAI nei tuoi messaggi etichette come "Item X", "Input X", "Chatbot:" o riferimenti ai numeri delle domande. Rispondi in modo naturale e discorsivo, includendo solo il messaggio vero e proprio.
@@ -98,86 +98,102 @@ Importante alla Conclusione: Accertati di includere ESATTAMENTE la parola "CONCL
 
 // Funzione helper per pulire i messaggi del bot da formattazioni ed etichette indesiderate
 function cleanMessageText(text) {
-    if (!text) return text;
-    text = text.replace('CONCLUSIONE_RAGGIUNTA', '').trim();
-    text = text.replace(/\*/g, '');
-    text = text.replace(/^(?:Item\s*\d+\w*|Input\s*\d+\w*|Chatbot)[\s:-]*/gim, '').trim();
-    return text;
+  if (!text) return text;
+  text = text.replace("CONCLUSIONE_RAGGIUNTA", "").trim();
+  text = text.replace("CONVERSAZIONE_ANNULLATA", "").trim();
+  text = text.replace(/\*/g, "");
+  text = text
+    .replace(/^(?:Item\s*\d+\w*|Input\s*\d+\w*|Chatbot)[\s:-]*/gim, "")
+    .trim();
+  return text;
 }
 
 let ai;
 export function initializeGenAI() {
-    if (!ai) {
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.includes('inserisci_qui')) {
-            console.error('API KEY NON VALIDA OR MANCANTE!');
-            return null; // Don't throw to allow UI to show error if needed
-        }
-        ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  if (!ai) {
+    if (
+      !process.env.GEMINI_API_KEY ||
+      process.env.GEMINI_API_KEY.includes("inserisci_qui")
+    ) {
+      console.error("API KEY NON VALIDA OR MANCANTE!");
+      return null; // Don't throw to allow UI to show error if needed
     }
-    return ai;
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return ai;
 }
 
 export async function startSession() {
-    const sessionId = uuidv4();
-    const gemini = initializeGenAI();
-    if (!gemini) {
-         return { sessionId, message: "Errore: Inserisci una chiave API valida nel file .env." };
-    }
+  const sessionId = uuidv4();
+  const gemini = initializeGenAI();
+  if (!gemini) {
+    return {
+      sessionId,
+      message: "Errore: Inserisci una chiave API valida nel file .env.",
+    };
+  }
 
-    try {
-        const chat = gemini.chats.create({
-            model: "gemini-2.5-flash",
-            config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.2, // Bassa temperature per rispettare pedissequamente il flusso
-            }
-        });
+  try {
+    const chat = gemini.chats.create({
+      model: "gemini-2.5-flash",
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.2, // Bassa temperature per rispettare pedissequamente il flusso
+      },
+    });
 
-        // Avviamo forzatamente il primo messaggio
-        const firstResponse = await chat.sendMessage({ message: "Inizia il questionario leggendo la regola 0." });
-        
-        sessions.set(sessionId, chat);
-        
-        return { sessionId, message: cleanMessageText(firstResponse.text) };
-    } catch (e) {
-        console.error('Errore inizializzazione AI:', e);
-        throw e;
-    }
+    // Avviamo forzatamente il primo messaggio
+    const firstResponse = await chat.sendMessage({
+      message: "Inizia il questionario leggendo la regola 0.",
+    });
+
+    sessions.set(sessionId, chat);
+
+    return { sessionId, message: cleanMessageText(firstResponse.text) };
+  } catch (e) {
+    console.error("Errore inizializzazione AI:", e);
+    throw e;
+  }
 }
 
 export async function sendMessage(sessionId, message) {
-    const chat = sessions.get(sessionId);
-    if (!chat) {
-        throw new Error('Sessione non trovata o scaduta');
-    }
+  const chat = sessions.get(sessionId);
+  if (!chat) {
+    throw new Error("Sessione non trovata o scaduta");
+  }
 
-    const response = await chat.sendMessage({ message });
-    let text = response.text;
-    
-    // Controlla se abbiamo finito
-    let isFinished = false;
-    if (text.includes('CONCLUSIONE_RAGGIUNTA')) {
-        isFinished = true;
-    }
+  const response = await chat.sendMessage({ message });
+  let text = response.text;
 
-    text = cleanMessageText(text);
+  // Controlla se abbiamo finito o annullato
+  let isFinished = false;
+  let isCancelled = false;
+  if (text.includes("CONCLUSIONE_RAGGIUNTA")) {
+    isFinished = true;
+  } else if (text.includes("CONVERSAZIONE_ANNULLATA")) {
+    isCancelled = true;
+  }
 
-    return { message: text, isFinished };
+  text = cleanMessageText(text);
+
+  return { message: text, isFinished, isCancelled };
 }
 
 export async function extractAndSaveToExcel(sessionId) {
-    const chat = sessions.get(sessionId);
-    if (!chat) {
-        throw new Error('Sessione non trovata per estrazione Excel');
-    }
+  const chat = sessions.get(sessionId);
+  if (!chat) {
+    throw new Error("Sessione non trovata per estrazione Excel");
+  }
 
-    const gemini = initializeGenAI();
+  const gemini = initializeGenAI();
 
-    // Estraiamo la storia per inviarla al processo di estrazione
-    const history = await chat.getHistory();
-    const historyText = history.map(h => `${h.role}: ${h.parts[0].text}`).join('\n');
+  // Estraiamo la storia per inviarla al processo di estrazione
+  const history = await chat.getHistory();
+  const historyText = history
+    .map((h) => `${h.role}: ${h.parts[0].text}`)
+    .join("\n");
 
-    const schemaPrompt = `Analizza questa cronologia di chat di un questionario per dipendenti:
+  const schemaPrompt = `Analizza questa cronologia di chat di un questionario per dipendenti:
 \`\`\`
 ${historyText}
 \`\`\`
@@ -217,24 +233,33 @@ Demo_Eta
 
 Restituisci SOLO un JSON valido, senza blocchi markdown né altro testo.`;
 
-    // Effettua la richiesta per ottenere il JSON strutturato
-    const extChat = gemini.chats.create({ model: "gemini-2.5-flash" });
-    const response = await extChat.sendMessage({ message: schemaPrompt });
-    let jsonText = response.text.trim();
-    if(jsonText.startsWith('```json')){
-       jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    }
-    
-    let extractedData = {};
-    try {
-        extractedData = JSON.parse(jsonText);
-    } catch(e) {
-        console.error('Errore parsing JSON da LLM', jsonText);
-        throw new Error('LLM non ha restituito JSON valido');
-    }
+  // Effettua la richiesta per ottenere il JSON strutturato
+  const extChat = gemini.chats.create({ model: "gemini-2.5-flash" });
+  const response = await extChat.sendMessage({ message: schemaPrompt });
+  let jsonText = response.text.trim();
+  if (jsonText.startsWith("```json")) {
+    jsonText = jsonText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+  }
 
-    await saveToDB(extractedData);
-    
-    // Pulisci memoria
+  let extractedData = {};
+  try {
+    extractedData = JSON.parse(jsonText);
+  } catch (e) {
+    console.error("Errore parsing JSON da LLM", jsonText);
+    throw new Error("LLM non ha restituito JSON valido");
+  }
+
+  await saveToDB(extractedData);
+
+  // Pulisci memoria
+  sessions.delete(sessionId);
+}
+
+export function deleteSession(sessionId) {
+  if (sessions.has(sessionId)) {
     sessions.delete(sessionId);
+  }
 }

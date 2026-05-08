@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.isFinished) {
                     await handleConclusion();
+                } else if (data.isCancelled) {
+                    handleCancellation();
                 } else {
                     isWaiting = false;
                 }
@@ -100,6 +102,26 @@ document.addEventListener('DOMContentLoaded', () => {
             hideTyping();
             isWaiting = false;
         }
+    }
+
+    // Gestisce l'annullamento
+    function handleCancellation() {
+        userInput.disabled = true;
+        sendBtn.disabled = true;
+        
+        // Sostituisce l'area di input con un messaggio di fine
+        const inputArea = document.querySelector('.input-area');
+        if (inputArea) {
+            inputArea.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); font-weight: 500; padding: 10px;">La conversazione è stata chiusa e i dati non sono stati salvati.</div>';
+        }
+        
+        fetch('/api/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+        }).catch(e => console.error('Errore durante annullamento', e));
+
+        isWaiting = false;
     }
 
     // --- Helpers UI ---
