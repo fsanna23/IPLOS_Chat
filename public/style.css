@@ -156,6 +156,11 @@ body {
     border-bottom-left-radius: 4px;
 }
 
+.message.bot .message-bubble strong {
+    font-weight: 600;
+    color: var(--primary);
+}
+
 .message.user .message-bubble {
     background-color: var(--user-msg-bg);
     color: var(--user-msg-color);
