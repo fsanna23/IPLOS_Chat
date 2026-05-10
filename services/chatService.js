@@ -222,6 +222,14 @@ export async function extractAndSaveToExcel(sessionId) {
     .map((h) => `${h.role}: ${h.parts[0].text}`)
     .join("\n");
 
+    // Extract the report: it's the last assistant message in history
+  const lastAssistantMsg = [...history]
+    .reverse()
+    .find(h => h.role === 'model');
+  const reportText = lastAssistantMsg
+    ? cleanMessageText(lastAssistantMsg.parts[0].text)
+    : null;
+
   const schemaPrompt = `Analizza questa cronologia di chat di un questionario per dipendenti:
 \`\`\`
 ${historyText}
@@ -280,6 +288,9 @@ Restituisci SOLO un JSON valido, senza blocchi markdown né altro testo.`;
     console.error("Errore parsing JSON da LLM", jsonText);
     throw new Error("LLM non ha restituito JSON valido");
   }
+
+   // Attach the report before saving
+  extractedData["Report"] = reportText;
 
   await saveToDB(extractedData);
 

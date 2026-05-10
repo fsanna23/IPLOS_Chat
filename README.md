@@ -90,6 +90,7 @@ mv chatService.js dbService.js excelService.js services/
        "Demo_Anzianita" TEXT,
        "Demo_Genere" TEXT,
        "Demo_Eta" TEXT,
+       "Report" TEXT,
        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
    );
    ```
