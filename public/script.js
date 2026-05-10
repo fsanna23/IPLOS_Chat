@@ -10,6 +10,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inizializza la chat
     async function startChat() {
         showTyping();
+
+        // Health check: verify Supabase is reachable before starting
+        try {
+            const healthRes = await fetch('/api/health');
+            const health = await healthRes.json();
+
+            if (!health.ok) {
+                appendMessage(
+                    'Il servizio di database non è al momento raggiungibile. Riprova più tardi.',
+                    'bot'
+                );
+                userInput.disabled = true;
+                sendBtn.disabled = true;
+                hideTyping();
+                return;
+            }
+        } catch {
+            appendMessage(
+                'Impossibile connettersi al server. Assicurati che il backend sia in esecuzione.',
+                'bot'
+            );
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            hideTyping();
+            return;
+        }
+
         try {
             const response = await fetch('/api/start', { method: 'POST' });
             const data = await response.json();
@@ -33,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = userInput.value.trim();
         if (!text || isWaiting || !sessionId) return;
 
-        // UI updates
         appendMessage(text, 'user');
         userInput.value = '';
         userInput.focus();
@@ -54,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Ritarda un attimo la risposta per effetto realistico
             setTimeout(async () => {
                 hideTyping();
                 appendMessage(data.message, 'bot');
@@ -80,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleConclusion() {
         userInput.disabled = true;
         sendBtn.disabled = true;
-        showTyping(); // Mostra elaborazione excel
+        showTyping();
 
         try {
             await fetch('/api/finish', {
@@ -89,11 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ sessionId })
             });
             
-            // Sostituisce l'area di input con un messaggio di fine
             const inputArea = document.querySelector('.input-area');
             inputArea.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); font-weight: 500; padding: 10px;">Il questionario è terminato. Puoi scorrere per leggere il report.</div>';
             
-            // Aggiunge un messaggio finale non bloccante
             appendMessage("Questionario terminato. I tuoi dati sono stati salvati correttamente. Grazie per il tuo tempo!", 'bot');
             
         } catch(e) {
@@ -109,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.disabled = true;
         sendBtn.disabled = true;
         
-        // Sostituisce l'area di input con un messaggio di fine
         const inputArea = document.querySelector('.input-area');
         if (inputArea) {
             inputArea.innerHTML = '<div style="width: 100%; text-align: center; color: var(--text-muted); font-weight: 500; padding: 10px;">La conversazione è stata chiusa e i dati non sono stati salvati.</div>';
@@ -129,10 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendMessage(text, sender) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `message ${sender}`;
-        
-        // Converte eventuali newline in br per formattazione
         const formattedText = text.replace(/\n/g, '<br>');
-        
         msgDiv.innerHTML = `<div class="message-bubble">${formattedText}</div>`;
         chatMessages.insertBefore(msgDiv, typingIndicator);
         scrollToBottom();
@@ -168,13 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sendBtn.addEventListener('click', sendMessage);
 
-    // Header close btn
     document.querySelector('.header-action').addEventListener('click', () => {
         if(confirm('Sei sicuro di voler chiudere la pagina? I dati non salvati andranno persi.')){
             window.close();
         }
     });
 
-    // Avvio automatico
     startChat();
 });

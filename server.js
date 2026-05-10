@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { sendMessage, startSession, extractAndSaveToExcel, deleteSession } from './services/chatService.js';
+import { checkSupabaseConnection } from './services/dbService.js';
 
 dotenv.config();
 const app = express();
@@ -13,6 +14,16 @@ const __dirname = path.dirname(__filename);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Health check — verifies Supabase is reachable before the chat is allowed to start
+app.get('/api/health', async (req, res) => {
+    const status = await checkSupabaseConnection();
+    if (status.ok) {
+        res.json({ ok: true });
+    } else {
+        res.status(503).json({ ok: false, error: status.error });
+    }
+});
 
 // Avvia una nuova sessione e ottiene il messaggio di benvenuto.
 app.post('/api/start', async (req, res) => {
@@ -67,6 +78,12 @@ app.post('/api/cancel', (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server web e API avviati su http://localhost:${PORT}`);
+    const status = await checkSupabaseConnection();
+    if (status.ok) {
+        console.log('[DB] Supabase connesso e pronto.');
+    } else {
+        console.warn('[DB] Attenzione: Supabase non raggiungibile:', status.error);
+    }
 });

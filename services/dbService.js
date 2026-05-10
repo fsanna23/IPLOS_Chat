@@ -1,35 +1,46 @@
-import pg from 'pg';
+import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
-const { Pool } = pg;
 
-// Carica le variabili d'ambiente prima di creare il pool
 dotenv.config();
 
-// Pool di connessioni riutilizzabile per tutta la vita del server
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY // use service role key on the server side
+);
+
+/**
+ * Checks whether Supabase is reachable and the table is accessible.
+ * @returns {{ ok: boolean, error?: string }}
+ */
+export async function checkSupabaseConnection() {
+    try {
+        const { error } = await supabase
+            .from('risposte')
+            .select('*')
+            .limit(1);
+
+        if (error) throw error;
+
+        return { ok: true };
+    } catch (err) {
+        console.error('[DB] Supabase connection check failed:', err.message);
+        return { ok: false, error: err.message };
+    }
+}
 
 /**
  * Inserisce una riga di risposte nella tabella `risposte`.
  * @param {Object} data - Oggetto JSON con le chiavi estratte da Gemini
  */
 export async function saveToDB(data) {
-    const columns = Object.keys(data);
-    const values = Object.values(data);
+    const { error } = await supabase
+        .from('risposte')
+        .insert(data);
 
-    // Costruisce dinamicamente la query INSERT in base alle chiavi presenti
-    const columnNames = columns.map(c => `"${c}"`).join(', ');
-    const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-
-    const query = `INSERT INTO risposte (${columnNames}) VALUES (${placeholders})`;
-
-    try {
-        await pool.query(query, values);
-        console.log('[DB] Risposta salvata nel database con successo.');
-    } catch (err) {
-        console.error('[DB] Errore durante il salvataggio:', err.message);
-        throw err;
+    if (error) {
+        console.error('[DB] Errore durante il salvataggio:', error.message);
+        throw error;
     }
+
+    console.log('[DB] Risposta salvata nel database con successo.');
 }
