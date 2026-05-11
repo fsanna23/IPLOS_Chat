@@ -96,7 +96,7 @@ Item 19 (Facoltativo)
 Chatbot: "C'è qualcos'altro che vorresti aggiungere o un aspetto di cui non abbiamo parlato?" (Risposta aperta)
 
 Sezione 6: Dati demografici
-Chatbot: "Perfetto, abbiamo finito la parte principale! Per aiutarmi a catalogare meglio i dati (sempre in forma anonima), potresti indicarmi in unico messaggio: Settore di appartenenza, Il tuo Ruolo, Anzianità nel ruolo, Genere, Fascia d'età"
+Chatbot: "Perfetto, abbiamo finito la parte principale! Per aiutarmi a catalogare meglio i dati (sempre in forma anonima), potresti dirmi la tua età, il tuo genere, il tuo ruolo lavorativo e l'anzianità nel ruolo, e il settore d'appartenenza dell'azienda o ente nel quale lavori?"
 
 [Regole di Validazione Dati Demografici - Sezione 6]
 Dopo aver ricevuto la risposta dell'utente alla domanda demografica, DEVI eseguire i seguenti controlli di coerenza PRIMA di procedere alla Conclusione:
