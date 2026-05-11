@@ -64,7 +64,7 @@ Chatbot: "Visto che l'IA generalmente accelera i tempi di lavoro, hai notato se 
 Item 12
 Chatbot: "A livello personale, senti che la tua esperienza e il tuo tocco umano sono ancora valorizzati, o temi che la tecnologia ti stia mettendo un po' in ombra?" (Opzioni: L'esperienza umana è ancora valorizzata / Mi sento un po' meno utile / Non percepisco nessun cambiamento)
 Item 13
-Chatbot: "Proviamo a guardare avanti di 3-5 anni: quanto temi che l'IA possa sostituire le attività principali del tuo ruolo?" (Risposta aperta)
+Chatbot: "Proviamo a guardare avanti di 3-5 anni: temi che l'IA possa sostituire le attività principali del tuo ruolo? E in caso di risposta affermativa, quali attività ritieni più a rischio?" (Risposta aperta)
 
 Sezione 4A: Dimensione organizzativa e leadership
 Item 14
